@@ -156,29 +156,47 @@ int main() {
         cout << "PIM> ";
         getline(cin, command);
 
-        if (command == "add") {
-            string taskDescription = command.substr(4);
-            manager.addTask(taskDescription);
-        } else if (command == "list") {
-            manager.listTasks();
-        } else if (command.find("complete ") == 0) {
-            size_t taskIndex = stoi(command.substr(9)) - 1;
-            manager.completeTask(taskIndex);
-        } else if (command.find("uncomplete ") == 0) {
-            size_t taskIndex = stoi(command.substr(11)) - 1;
-            manager.uncompleteTask(taskIndex);
-        } else if (command.find("delete ") == 0) {
-            if (command == "delete all") {
-                manager.deleteAllTasks("all");
-            } else if (command == "delete completed") {
-                manager.deleteAllTasks("completed");
-            } else {
-                size_t taskIndex = stoi(command.substr(7)) - 1;
-                manager.deleteTask(taskIndex);
+        // Komutu ve parametreyi ayırma
+        size_t spaceIndex = command.find(' ');
+        string cmd = command.substr(0, spaceIndex);
+        string param = spaceIndex != string::npos ? command.substr(spaceIndex + 1) : "";
+
+        if (cmd == "add") {
+            if (param.empty()) {
+                cout << "Please provide a task description." << endl;
+                continue;
             }
-        } else if (command == "commands") {
+            manager.addTask(param);
+        } else if (cmd == "list") {
+            manager.listTasks();
+        } else if (cmd == "complete") {
+            if (param.empty()) {
+                cout << "Please specify a task number to complete." << endl;
+                continue;
+            }
+            size_t taskIndex = stoi(param) - 1;
+            manager.completeTask(taskIndex);
+        } else if (cmd == "uncomplete") {
+            if (param.empty()) {
+                cout << "Please specify a task number to uncomplete." << endl;
+                continue;
+            }
+            size_t taskIndex = stoi(param) - 1;
+            manager.uncompleteTask(taskIndex);
+        } else if (cmd == "delete") {
+            if (param == "all") {
+                manager.deleteAllTasks("all");
+            } else if (param == "completed") {
+                manager.deleteAllTasks("completed");
+            } else if (!param.empty()) {
+                size_t taskIndex = stoi(param) - 1;
+                manager.deleteTask(taskIndex);
+            } else {
+                cout << "Please specify a task number to delete or use 'delete all' or 'delete completed'." << endl;
+            }
+        } else if (cmd == "commands") {
             manager.showCommands();
-        } else if (command == "exit") {
+        } else if (cmd == "exit") {
             break;
         } else {
             cout << "Unknown command. Type 'commands' to see all available commands." << endl;
@@ -187,3 +205,4 @@ int main() {
 
     return 0;
 }
+
