@@ -70,7 +70,7 @@ public:
         cout << "---COMPLETED---" << endl;
         for (size_t i = 0; i < tasks.size(); ++i) {
             if (tasks[i].completed) {
-                cout << "c-" << i + 1 << ". " << tasks[i].description << endl;
+                cout << i + 1 << ". " << tasks[i].description << endl;
                 hasCompleted = true;
             }
         }
