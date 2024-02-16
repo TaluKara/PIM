@@ -149,7 +149,7 @@ void showServices() {
 int main() {
     while (true) {
         showServices();
-        cout << "\nSelect a service (or type 'exit' to close the program) \n\nPIM>";
+        cout << "\nSelect a service (or type 'exit' to close the program) \n\nPIM> ";
         string serviceChoice;
         getline(cin, serviceChoice);
 
