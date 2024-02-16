@@ -84,10 +84,54 @@ public:
         cout << "\n---------------------------\n";
     }
 
-    // Function to delete tasks, either a specific task by number or all/completed tasks.
+        // Function to delete tasks, either a specific task by number or all/completed tasks.
     void deleteTask(const string& param) {
-        // Implementation not shown for brevity
+    char confirm; // Onay değişkenini burada tanımlayın.
+    if (param == "all") {
+        string deleteChoice;
+        cout << "\nDelete all tasks or only completed tasks? (all/completed): ";
+        getline(cin, deleteChoice);
+
+        if (deleteChoice == "all" || deleteChoice == "completed") {
+            cout << "\nAre you sure you want to delete " << (deleteChoice == "all" ? "all tasks" : "completed tasks") << "? (y/n): ";
+            cin >> confirm;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            if (confirm == 'y' || confirm == 'Y') {
+                if (deleteChoice == "all") {
+                    tasks.clear();
+                    cout << "\nAll tasks have been deleted.\n";
+                } else if (deleteChoice == "completed") {
+                    tasks.erase(remove_if(tasks.begin(), tasks.end(), [](const Task& task) { return task.completed; }), tasks.end());
+                    cout << "\nCompleted tasks have been deleted.\n";
+                }
+            } else {
+                cout << "\nDeletion cancelled.\n";
+            }
+        } else {
+            cout << "\nInvalid choice. Please type 'all' or 'completed'.\n";
+        }
+    } else {
+        try {
+            size_t taskIndex = stoi(param) - 1;
+            if (taskIndex < tasks.size()) {
+                cout << "\nAre you sure you want to delete \"" << tasks[taskIndex].description << "\"? (y/n): ";
+                cin >> confirm;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                if (confirm == 'y' || confirm == 'Y') {
+                    tasks.erase(tasks.begin() + taskIndex);
+                    cout << "\nTask deleted.\n";
+                } else {
+                    cout << "\nDeletion cancelled.\n";
+                }
+            } else {
+                cout << "\nInvalid task number.\n";
+            }
+        } catch (const std::invalid_argument& e) {
+            cout << "\nInvalid argument. Please enter a valid task number or 'all'.\n";
+        }
     }
+}
+    
 
     // Save tasks to a file, marking them as completed or not.
     void saveTasks() {
