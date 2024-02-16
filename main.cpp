@@ -4,7 +4,7 @@
 #include <limits>
 #include <fstream>
 #include <algorithm>
-#include <exception>
+#include <cstdlib>
 
 using namespace std;
 
@@ -32,65 +32,83 @@ public:
 
     void addTask(const string& taskDescription) {
         tasks.emplace_back(taskDescription);
-        cout << "\nTask added: " << taskDescription << "\n\n";
+        cout << "\nTask added: " << taskDescription << "\n";
     }
 
     void completeTask(size_t taskIndex) {
         if (taskIndex < tasks.size() && !tasks[taskIndex].completed) {
             tasks[taskIndex].completed = true;
-            cout << "\nTask completed: " << tasks[taskIndex].description << "\n\n";
+            cout << "\nTask completed: " << tasks[taskIndex].description << "\n";
         } else {
-            cout << "\nInvalid task index or task already completed.\n\n";
+            cout << "\nInvalid task index or task already completed.\n";
         }
     }
 
     void uncompleteTask(size_t taskIndex) {
         if (taskIndex < tasks.size() && tasks[taskIndex].completed) {
             tasks[taskIndex].completed = false;
-            cout << "\nTask uncompleted: " << tasks[taskIndex].description << "\n\n";
+            cout << "\nTask uncompleted: " << tasks[taskIndex].description << "\n";
         } else {
-            cout << "\nInvalid task index or task not completed.\n\n";
+            cout << "\nInvalid task index or task not completed.\n";
         }
     }
 
     void listTasks() const {
-        cout << "\n-------- TASK LIST --------\n";
+        cout << "\n-------- TASK LIST --------";
         for (size_t i = 0; i < tasks.size(); ++i) {
-            cout << i + 1 << ". [" << (tasks[i].completed ? "X" : " ") << "] " << tasks[i].description << "\n";
+            cout << "\n" << i + 1 << ". [" << (tasks[i].completed ? "X" : " ") << "] " << tasks[i].description;
         }
-        cout << "---------------------------\n\n";
+        cout << "\n---------------------------\n";
     }
 
     void deleteTask(const string& param) {
-        if (param == "all") {
-            cout << "\nDelete (1) all tasks or (2) only completed tasks? ";
-            char choice;
-            cin >> choice;
+    char confirm; // Onay değişkenini burada tanımlayın.
+    if (param == "all") {
+        string deleteChoice;
+        cout << "\nDelete all tasks or only completed tasks? (all/completed): ";
+        getline(cin, deleteChoice);
+
+        if (deleteChoice == "all" || deleteChoice == "completed") {
+            cout << "\nAre you sure you want to delete " << (deleteChoice == "all" ? "all tasks" : "completed tasks") << "? (y/n): ";
+            cin >> confirm;
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            if (choice == '1') {
-                tasks.clear();
-                cout << "\nAll tasks have been deleted.\n\n";
-            } else if (choice == '2') {
-                auto newEnd = remove_if(tasks.begin(), tasks.end(), [](const Task& task){ return task.completed; });
-                tasks.erase(newEnd, tasks.end());
-                cout << "\nAll completed tasks have been deleted.\n\n";
+            if (confirm == 'y' || confirm == 'Y') {
+                if (deleteChoice == "all") {
+                    tasks.clear();
+                    cout << "\nAll tasks have been deleted.\n";
+                } else if (deleteChoice == "completed") {
+                    tasks.erase(remove_if(tasks.begin(), tasks.end(), [](const Task& task) { return task.completed; }), tasks.end());
+                    cout << "\nCompleted tasks have been deleted.\n";
+                }
             } else {
-                cout << "\nInvalid choice. No tasks were deleted.\n\n";
+                cout << "\nDeletion cancelled.\n";
             }
         } else {
-            try {
-                size_t taskIndex = stoi(param) - 1;
-                if (taskIndex >= 0 && taskIndex < tasks.size()) {
+            cout << "\nInvalid choice. Please type 'all' or 'completed'.\n";
+        }
+    } else {
+        try {
+            size_t taskIndex = stoi(param) - 1;
+            if (taskIndex < tasks.size()) {
+                cout << "\nAre you sure you want to delete \"" << tasks[taskIndex].description << "\"? (y/n): ";
+                cin >> confirm;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                if (confirm == 'y' || confirm == 'Y') {
                     tasks.erase(tasks.begin() + taskIndex);
-                    cout << "\nTask deleted.\n\n";
+                    cout << "\nTask deleted.\n";
                 } else {
-                    cout << "\nInvalid task index.\n\n";
+                    cout << "\nDeletion cancelled.\n";
                 }
-            } catch (const std::exception& e) {
-                cout << "\nPlease specify a valid task number or 'all'.\n\n";
+            } else {
+                cout << "\nInvalid task number.\n";
             }
+        } catch (const std::invalid_argument& e) {
+            cout << "\nInvalid argument. Please enter a valid task number or 'all'.\n";
         }
     }
+}
+
+
 
     void saveTasks() {
         ofstream outFile(filename);
@@ -110,76 +128,79 @@ public:
     }
 
     void showCommands() const {
-        cout << "\nAvailable commands:\n"
-             << "  add <task_description> - Add a new task\n"
-             << "  list - List all tasks\n"
-             << "  complete <task_number> - Mark a task as completed\n"
-             << "  uncomplete <task_number> - Mark a task as not completed\n"
-             << "  delete <task_number> or 'all' - Delete a specific task or all tasks\n"
-             << "  exit - Return to service selection\n\n";
+        cout << "\n\nAvailable commands:"
+             << "\n  add <task_description> - Add a new task"
+             << "\n  list - List all tasks"
+             << "\n  complete <task_number> - Mark a task as completed"
+             << "\n  uncomplete <task_number> - Mark a task as not completed"
+             << "\n  delete <task_number> or \"all\" - Delete a specific task or all tasks"
+             << "\n  exit - Exit the to-do list management\n";
     }
 };
 
 void showServices() {
-    cout << "\nAvailable services:\n"
-         << "1- to-do-list\n"
-         << "2- lorem (Coming soon...)\n"
-         << "3- ipsum (Coming soon...)\n"
-         << "Type 'exit' to close the program.\n\n";
+    cout << "\nWelcome to the Personal Information Manager. \n\nAvailable services:"
+         << "\n1- to-do-list"
+         << "\n2- calculator (Coming soon...)"
+         << "\n3- calendar (Coming soon...)"
+         << "\nType 'exit' to close the program.\n";
 }
 
 int main() {
     while (true) {
         showServices();
-        cout << "PIM> ";
-        string choice;
-        getline(cin, choice);
+        cout << "\nSelect a service (or type 'exit' to close the program) \n\nPIM>";
+        string serviceChoice;
+        getline(cin, serviceChoice);
 
-        if (choice == "1") {
+        if (serviceChoice == "1") {
             PersonalInformationManager manager;
-            cout << "\nWelcome to the To-Do List. Type 'commands' for a list of all commands.\n\n";
+            cout << "\nWelcome to the to-do list.";
+            manager.showCommands();
 
             string command;
             while (true) {
-                cout << "PIM> ";
+                cout << "\nPIM> ";
                 getline(cin, command);
 
                 if (command == "exit") {
                     break;
-                } else {
-                    size_t spaceIndex = command.find(' ');
-                    string cmd = command.substr(0, spaceIndex);
-                    string param = spaceIndex != string::npos ? command.substr(spaceIndex + 1) : "";
+                }
 
-                    if (cmd == "add") {
-                        manager.addTask(param);
-                    } else if (cmd == "list") {
-                        manager.listTasks();
-                    } else if (cmd == "complete") {
-                        try {
-                            manager.completeTask(stoi(param) - 1);
-                        } catch (...) {
-                            cout << "\nPlease specify a valid task number.\n\n";
-                        }
-                    } else if (cmd == "uncomplete") {
-                        try {
-                            manager.uncompleteTask(stoi(param) - 1);
-                        } catch (...) {
-                            cout << "\nPlease specify a valid task number.\n\n";
-                        }
-                    } else if (cmd == "delete") {
-                        manager.deleteTask(param);
-                    } else if (cmd == "commands") {
-                        manager.showCommands();
-                    } else {
-                        cout << "\nUnknown command. Type 'commands' for a list of all commands.\n\n";
+                size_t spaceIndex = command.find(' ');
+                string cmd = command.substr(0, spaceIndex);
+                string param = spaceIndex != string::npos ? command.substr(spaceIndex + 1) : "";
+
+                if (cmd == "add") {
+                    manager.addTask(param);
+                } else if (cmd == "list") {
+                    manager.listTasks();
+                } else if (cmd == "complete") {
+                    try {
+                        size_t taskIndex = stoi(param) - 1;
+                        manager.completeTask(taskIndex);
+                    } catch (...) {
+                        cout << "\nPlease specify a valid task number.\n";
                     }
+                } else if (cmd == "uncomplete") {
+                    try {
+                        size_t taskIndex = stoi(param) - 1;
+                        manager.uncompleteTask(taskIndex);
+                    } catch (...) {
+                        cout << "\nPlease specify a valid task number.\n";
+                    }
+                } else if (cmd == "delete") {
+                    manager.deleteTask(param);
+                } else if (cmd == "commands") {
+                    manager.showCommands();
+                } else {
+                    cout << "\nUnknown command. Type 'commands' for a list of all commands.\n";
                 }
             }
-        } else if (choice == "exit") {
+        } else if (serviceChoice == "exit") {
             break;
         } else {
-            cout << "\nThis service is currently under development or not available.\n\n";
+            cout << "\nThis service is currently under development or not available.\n";
         }
     }
 
