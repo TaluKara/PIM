@@ -4,7 +4,7 @@
 #include <limits>
 #include <fstream>
 #include <algorithm>
-#include <cstdlib>
+#include <exception>
 
 using namespace std;
 
@@ -32,52 +32,64 @@ public:
 
     void addTask(const string& taskDescription) {
         tasks.emplace_back(taskDescription);
-        cout << "Task added: " << taskDescription << endl;
+        cout << "\nTask added: " << taskDescription << "\n\n";
     }
 
     void completeTask(size_t taskIndex) {
         if (taskIndex < tasks.size() && !tasks[taskIndex].completed) {
             tasks[taskIndex].completed = true;
-            cout << "Task completed: " << tasks[taskIndex].description << endl;
+            cout << "\nTask completed: " << tasks[taskIndex].description << "\n\n";
         } else {
-            cout << "Invalid task index or task already completed." << endl;
+            cout << "\nInvalid task index or task already completed.\n\n";
         }
     }
 
     void uncompleteTask(size_t taskIndex) {
         if (taskIndex < tasks.size() && tasks[taskIndex].completed) {
             tasks[taskIndex].completed = false;
-            cout << "Task uncompleted: " << tasks[taskIndex].description << endl;
+            cout << "\nTask uncompleted: " << tasks[taskIndex].description << "\n\n";
         } else {
-            cout << "Invalid task index or task not completed." << endl;
+            cout << "\nInvalid task index or task not completed.\n\n";
         }
     }
 
     void listTasks() const {
-        cout << "-------- TASK LIST --------" << endl;
-        cout << "----UNCOMPLETED----" << endl;
-        bool hasUncompleted = false, hasCompleted = false;
+        cout << "\n-------- TASK LIST --------\n";
         for (size_t i = 0; i < tasks.size(); ++i) {
-            if (!tasks[i].completed) {
-                cout << i + 1 << ". " << tasks[i].description << endl;
-                hasUncompleted = true;
-            }
+            cout << i + 1 << ". [" << (tasks[i].completed ? "X" : " ") << "] " << tasks[i].description << "\n";
         }
-        if (!hasUncompleted) {
-            cout << "No uncompleted tasks!" << endl;
-        }
+        cout << "---------------------------\n\n";
+    }
 
-        cout << "---COMPLETED---" << endl;
-        for (size_t i = 0; i < tasks.size(); ++i) {
-            if (tasks[i].completed) {
-                cout << i + 1 << ". " << tasks[i].description << endl;
-                hasCompleted = true;
+    void deleteTask(const string& param) {
+        if (param == "all") {
+            cout << "\nDelete (1) all tasks or (2) only completed tasks? ";
+            char choice;
+            cin >> choice;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            if (choice == '1') {
+                tasks.clear();
+                cout << "\nAll tasks have been deleted.\n\n";
+            } else if (choice == '2') {
+                auto newEnd = remove_if(tasks.begin(), tasks.end(), [](const Task& task){ return task.completed; });
+                tasks.erase(newEnd, tasks.end());
+                cout << "\nAll completed tasks have been deleted.\n\n";
+            } else {
+                cout << "\nInvalid choice. No tasks were deleted.\n\n";
+            }
+        } else {
+            try {
+                size_t taskIndex = stoi(param) - 1;
+                if (taskIndex >= 0 && taskIndex < tasks.size()) {
+                    tasks.erase(tasks.begin() + taskIndex);
+                    cout << "\nTask deleted.\n\n";
+                } else {
+                    cout << "\nInvalid task index.\n\n";
+                }
+            } catch (const std::exception& e) {
+                cout << "\nPlease specify a valid task number or 'all'.\n\n";
             }
         }
-        if (!hasCompleted) {
-            cout << "No completed tasks!" << endl;
-        }
-        cout << "---------------------------" << endl;
     }
 
     void saveTasks() {
@@ -97,112 +109,79 @@ public:
         }
     }
 
-    void deleteTask(size_t taskIndex) {
-        if (taskIndex < tasks.size()) {
-            cout << "Are you sure you want to delete \"" << tasks[taskIndex].description << "\"? (y/n): ";
-            char response;
-            cin >> response;
-            if (response == 'y' || response == 'Y') {
-                tasks.erase(tasks.begin() + taskIndex);
-                cout << "Task deleted." << endl;
-            } else {
-                cout << "Deletion cancelled." << endl;
-            }
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        } else {
-            cout << "Invalid task index." << endl;
-        }
-    }
-
-    void deleteAllTasks(const string& option) {
-        string prompt = "Are you sure you want to delete ";
-        prompt += (option == "all") ? "all tasks? (y/n): " : "all completed tasks? (y/n): ";
-        cout << prompt;
-        char response;
-        cin >> response;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        if (response == 'y' || response == 'Y') {
-            if (option == "all") {
-                tasks.clear();
-            } else if (option == "completed") {
-                tasks.erase(remove_if(tasks.begin(), tasks.end(), [](const Task& task) { return task.completed; }), tasks.end());
-            }
-            cout << "Tasks deleted." << endl;
-        } else {
-            cout << "Deletion cancelled." << endl;
-        }
-    }
-
     void showCommands() const {
-        cout << "Available commands:" << endl;
-        cout << "  add <task_description> - Add a new task" << endl;
-        cout << "  list - List all tasks" << endl;
-        cout << "  complete <task_number> - Mark a task as completed" << endl;
-        cout << "  uncomplete <task_number> - Mark a task as not completed" << endl;
-        cout << "  delete <task_number> - Delete a specific task" << endl;
-        cout << "  delete all - Delete all tasks" << endl;
-        cout << "  delete completed - Delete all completed tasks" << endl;
-        cout << "  commands - List all commands" << endl;
-        cout << "  exit - Exit the program" << endl;
+        cout << "\nAvailable commands:\n"
+             << "  add <task_description> - Add a new task\n"
+             << "  list - List all tasks\n"
+             << "  complete <task_number> - Mark a task as completed\n"
+             << "  uncomplete <task_number> - Mark a task as not completed\n"
+             << "  delete <task_number> or 'all' - Delete a specific task or all tasks\n"
+             << "  exit - Return to service selection\n\n";
     }
 };
 
+void showServices() {
+    cout << "\nAvailable services:\n"
+         << "1- to-do-list\n"
+         << "2- lorem (Coming soon...)\n"
+         << "3- ipsum (Coming soon...)\n"
+         << "Type 'exit' to close the program.\n\n";
+}
+
 int main() {
-    PersonalInformationManager manager;
-    cout << "Welcome to Personal Information Manager. Type 'commands' for a list of all commands." << endl;
-
-    string command;
     while (true) {
+        showServices();
         cout << "PIM> ";
-        getline(cin, command);
+        string choice;
+        getline(cin, choice);
 
-        // Komutu ve parametreyi ayırma
-        size_t spaceIndex = command.find(' ');
-        string cmd = command.substr(0, spaceIndex);
-        string param = spaceIndex != string::npos ? command.substr(spaceIndex + 1) : "";
+        if (choice == "1") {
+            PersonalInformationManager manager;
+            cout << "\nWelcome to the To-Do List. Type 'commands' for a list of all commands.\n\n";
 
-        if (cmd == "add") {
-            if (param.empty()) {
-                cout << "Please provide a task description." << endl;
-                continue;
+            string command;
+            while (true) {
+                cout << "PIM> ";
+                getline(cin, command);
+
+                if (command == "exit") {
+                    break;
+                } else {
+                    size_t spaceIndex = command.find(' ');
+                    string cmd = command.substr(0, spaceIndex);
+                    string param = spaceIndex != string::npos ? command.substr(spaceIndex + 1) : "";
+
+                    if (cmd == "add") {
+                        manager.addTask(param);
+                    } else if (cmd == "list") {
+                        manager.listTasks();
+                    } else if (cmd == "complete") {
+                        try {
+                            manager.completeTask(stoi(param) - 1);
+                        } catch (...) {
+                            cout << "\nPlease specify a valid task number.\n\n";
+                        }
+                    } else if (cmd == "uncomplete") {
+                        try {
+                            manager.uncompleteTask(stoi(param) - 1);
+                        } catch (...) {
+                            cout << "\nPlease specify a valid task number.\n\n";
+                        }
+                    } else if (cmd == "delete") {
+                        manager.deleteTask(param);
+                    } else if (cmd == "commands") {
+                        manager.showCommands();
+                    } else {
+                        cout << "\nUnknown command. Type 'commands' for a list of all commands.\n\n";
+                    }
+                }
             }
-            manager.addTask(param);
-        } else if (cmd == "list") {
-            manager.listTasks();
-        } else if (cmd == "complete") {
-            if (param.empty()) {
-                cout << "Please specify a task number to complete." << endl;
-                continue;
-            }
-            size_t taskIndex = stoi(param) - 1;
-            manager.completeTask(taskIndex);
-        } else if (cmd == "uncomplete") {
-            if (param.empty()) {
-                cout << "Please specify a task number to uncomplete." << endl;
-                continue;
-            }
-            size_t taskIndex = stoi(param) - 1;
-            manager.uncompleteTask(taskIndex);
-        } else if (cmd == "delete") {
-            if (param == "all") {
-                manager.deleteAllTasks("all");
-            } else if (param == "completed") {
-                manager.deleteAllTasks("completed");
-            } else if (!param.empty()) {
-                size_t taskIndex = stoi(param) - 1;
-                manager.deleteTask(taskIndex);
-            } else {
-                cout << "Please specify a task number to delete or use 'delete all' or 'delete completed'." << endl;
-            }
-        } else if (cmd == "commands") {
-            manager.showCommands();
-        } else if (cmd == "exit") {
+        } else if (choice == "exit") {
             break;
         } else {
-            cout << "Unknown command. Type 'commands' to see all available commands." << endl;
+            cout << "\nThis service is currently under development or not available.\n\n";
         }
     }
 
     return 0;
 }
-
